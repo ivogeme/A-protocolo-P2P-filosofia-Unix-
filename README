@@ -1,0 +1,54 @@
+Protocolo Alfa S2S (Servidor para Servidor) – v0.1 Alfa
+Visão Geral
+Este projeto implementa uma base mínima de comunicação entre servidores, inspirada na filosofia Unix e em conceitos do Linux.
+O objetivo é fornecer um núcleo minimalista e modular, permitindo que qualquer desenvolvedor crie seu próprio protocolo S2S a partir desta base.
+Diferente do modelo tradicional cliente-servidor, cada servidor pode iniciar e responder a mensagens, funcionando como um nó igualitário na rede. Isso abre espaço para novas arquiteturas distribuídas e integração entre sistemas.
+Filosofia do Projeto
+Modularidade e simplicidade: faz uma coisa, e faz bem feita. Minimalista para fácil extensão.
+Código aberto: qualquer pessoa pode construir por cima, adicionando criptografia, cache, logs ou novas mensagens.
+Base para inovação: o núcleo funciona como o “coração” do protocolo S2S, servindo de fundação para melhorias.
+Flexibilidade: funciona em qualquer servidor que suporte Python, facilitando testes e aprendizado.
+Mensagens Suportadas (v0.1 Alfa)
+PING → retorna PONG
+STATUS → retorna OK
+MSG → confirma recebimento
+CMD → executa comando simulado
+Outros tipos → retornam erro "Tipo desconhecido"
+Mensagens incluem timestamps e identificação de origem e destino, permitindo rastreamento simples.
+Limitações
+Versão Alfa: sem criptografia ou autenticação avançada.
+O foco é fornecer a base, não um protocolo completo pronto para produção.
+Como Usar
+1. Executar o Servidor
+Bash
+Copiar código
+python server.py
+2. Enviar Mensagens do Cliente
+Python
+Copiar código
+import socket
+import json
+import time
+
+msg = {
+    "tipo": "PING",
+    "origem": "srv1",
+    "destino": "srv2",
+    "timestamp": int(time.time()),
+    "conteudo": ""
+}
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect(("IP_DO_SERVIDOR", 9000))
+s.sendall(json.dumps(msg).encode())
+
+resposta = s.recv(1024)
+print("Resposta recebida:", resposta.decode())
+
+s.close()
+
+Objetivo
+Permitir que qualquer desenvolvedor ou entusiasta explore comunicação entre servidores de forma prática, rápida e aberta. O projeto serve como ponto de partida para protocolos personalizados, experimentação e aprendizado.
+
+git tag -a v0.1-alpha -m "Primeira versão Alfa"
+git push origin v0.1-alpha
