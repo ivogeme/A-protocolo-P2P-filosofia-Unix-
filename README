@@ -1,54 +1,131 @@
-Protocolo Alfa S2S (Servidor para Servidor) – v0.1 Alfa
-Visão Geral
-Este projeto implementa uma base mínima de comunicação entre servidores, inspirada na filosofia Unix e em conceitos do Linux.
-O objetivo é fornecer um núcleo minimalista e modular, permitindo que qualquer desenvolvedor crie seu próprio protocolo S2S a partir desta base.
-Diferente do modelo tradicional cliente-servidor, cada servidor pode iniciar e responder a mensagens, funcionando como um nó igualitário na rede. Isso abre espaço para novas arquiteturas distribuídas e integração entre sistemas.
-Filosofia do Projeto
-Modularidade e simplicidade: faz uma coisa, e faz bem feita. Minimalista para fácil extensão.
-Código aberto: qualquer pessoa pode construir por cima, adicionando criptografia, cache, logs ou novas mensagens.
-Base para inovação: o núcleo funciona como o “coração” do protocolo S2S, servindo de fundação para melhorias.
-Flexibilidade: funciona em qualquer servidor que suporte Python, facilitando testes e aprendizado.
-Mensagens Suportadas (v0.1 Alfa)
-PING → retorna PONG
-STATUS → retorna OK
-MSG → confirma recebimento
-CMD → executa comando simulado
-Outros tipos → retornam erro "Tipo desconhecido"
-Mensagens incluem timestamps e identificação de origem e destino, permitindo rastreamento simples.
-Limitações
-Versão Alfa: sem criptografia ou autenticação avançada.
-O foco é fornecer a base, não um protocolo completo pronto para produção.
-Como Usar
-1. Executar o Servidor
-Bash
-Copiar código
-python server.py
-2. Enviar Mensagens do Cliente
-Python
-Copiar código
-import socket
-import json
-import time
+# S2S
+### Simple-to-Simple Communication Protocol
 
-msg = {
-    "tipo": "PING",
-    "origem": "srv1",
-    "destino": "srv2",
-    "timestamp": int(time.time()),
-    "conteudo": ""
-}
+O S2S é um protocolo experimental de comunicação entre nós, projetado para permitir troca de mensagens, identificação de dispositivos e descoberta de outros nós em uma rede local.
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect(("IP_DO_SERVIDOR", 9000))
-s.sendall(json.dumps(msg).encode())
+O projeto busca desenvolver uma alternativa simples, leve e extensível para comunicação direta entre dispositivos, com uma arquitetura que possa futuramente receber implementações em diferentes linguagens de programação.
 
-resposta = s.recv(1024)
-print("Resposta recebida:", resposta.decode())
+## Estado do projeto
 
-s.close()
+**Versão:** S2S/0.2  
+**Estado:** Experimental
 
-Objetivo
-Permitir que qualquer desenvolvedor ou entusiasta explore comunicação entre servidores de forma prática, rápida e aberta. O projeto serve como ponto de partida para protocolos personalizados, experimentação e aprendizado.
+O S2S ainda está em desenvolvimento. A versão atual é um protótipo funcional destinado a testes, experimentação e evolução da arquitetura.
 
-git tag -a v0.1-alpha -m "Primeira versão Alfa"
-git push origin v0.1-alpha
+Não é recomendado utilizá-lo em produção ou para transmitir informações sensíveis.
+
+## Objetivos
+
+- Permitir comunicação direta entre nós.
+- Oferecer um protocolo simples de compreender e implementar.
+- Facilitar a descoberta de dispositivos na rede local.
+- Permitir troca de mensagens entre nós.
+- Fornecer informações básicas sobre os nós.
+- Criar uma base para futuras implementações em outras linguagens.
+- Manter o núcleo simples e extensível.
+
+## Recursos atuais
+
+A implementação Python do S2S/0.2 inclui:
+
+- Comunicação TCP.
+- Mensagens estruturadas em JSON.
+- Codificação de mensagens em UTF-8.
+- Enquadramento TCP com cabeçalho de 4 bytes.
+- Handshake básico entre cliente e servidor.
+- Identificação dos nós.
+- Operações PING e PONG.
+- Consulta de STATUS.
+- Troca de mensagens de texto.
+- Descoberta de nós por broadcast UDP.
+- Identificador local persistente do nó, quando o sistema permite.
+- Tratamento básico de erros de comunicação.
+
+## Arquitetura
+
+O protótipo utiliza dois mecanismos de comunicação.
+
+### TCP
+
+O TCP transporta as mensagens entre os nós.
+
+Porta padrão: `9000`.
+
+As mensagens são transmitidas em frames compostos por:
+
+1. Um cabeçalho de 4 bytes contendo o tamanho do payload.
+2. Um objeto JSON codificado em UTF-8.
+
+O cabeçalho utiliza um inteiro sem sinal de 32 bits em ordem de bytes de rede, também conhecida como big-endian.
+
+O tamanho máximo permitido pelo código atual é de 1 MiB por frame.
+
+### UDP
+
+O UDP é utilizado para descoberta na rede local.
+
+Porta padrão: `9001`.
+
+Os nós enviam uma mensagem de descoberta e respondem com informações básicas de identificação.
+
+O funcionamento depende das características da rede e das permissões do dispositivo.
+
+## Handshake
+
+O handshake básico segue esta sequência:
+
+1. O cliente envia `HELLO`.
+2. O servidor responde `HELLO`.
+3. O servidor envia `IDENTIFY`.
+4. O servidor envia `READY`.
+5. O cliente envia a operação desejada.
+6. O servidor processa a operação e responde.
+
+O handshake atual verifica a estrutura básica da comunicação e a versão declarada do protocolo.
+
+Ele não fornece autenticação criptográfica.
+
+## Operações disponíveis
+
+### PING
+
+Verifica se o nó remoto responde.
+
+Resposta esperada: `PONG`.
+
+### STATUS
+
+Solicita informações sobre o nó remoto, incluindo:
+
+- Identificador do nó.
+- Nome.
+- Versão do protocolo.
+- Tempo de atividade.
+- Capacidades anunciadas.
+
+### MSG
+
+Envia uma mensagem de texto para o nó remoto.
+
+O servidor apresenta a mensagem recebida e devolve uma confirmação.
+
+### DISCOVER
+
+O processamento TCP permite solicitar informações de identificação.
+
+A descoberta automática na rede local é realizada separadamente por UDP.
+
+## Requisitos
+
+- Python 3.9 ou posterior recomendado.
+- `cliente.py`.
+- `servidor.py`.
+
+O protótipo utiliza módulos da biblioteca padrão do Python.
+
+## Como executar
+
+Inicie o nó servidor:
+
+```bash
+python servidor.py
